@@ -37,8 +37,80 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Joel Håkansson
  */
 public class XMLTools {
-	
+
+	private static final byte[] USC_4_BE = new byte[]{0x00, 0x00, (byte)0xFE, (byte)0xFF};
+	private static final byte[] USC_4_LE = new byte[]{(byte)0xFF, (byte)0xFE, 0x00, 0x00};
+	private static final byte[] USC_4_2143 = new byte[]{0x00, 0x00, (byte)0xFF, (byte)0xFE};
+	private static final byte[] USC_4_3412 = new byte[]{(byte)0xFE, (byte)0xFF, 0x00, 0x00};
+	private static final byte[] UTF_8 = new byte[] {(byte)0x3C, (byte)0x3F, 0x78, 0x6D};
+	static final Pattern XML_DECL = Pattern.compile("\\A\\s*<\\?xml.*?encoding\\s*=\\s*[\"'](?<ENCODING>[^'\"]*)[\"'].*\\?>");
+
+
 	private XMLTools() {}
+	
+
+	/**
+	 * Gets the declared encoding from the given string. If the string
+	 * doesn't start with an XML declaration, an empty optional is returned.
+	 * @param text the xml
+	 * @return returns a string with the declared encoding
+	 */
+	public static Optional<String> getDeclaredEncoding(String text) {
+		Matcher m = XML_DECL.matcher(text);
+		String enc;
+		if (m.find() && (enc=m.group("ENCODING"))!=null) {
+			return Optional.of(enc);
+		}
+		return Optional.empty();
+	}
+	
+	/**
+	 * Detects XML encoding based on this algorithm: <a href="https://www.w3.org/TR/xml/#sec-guessing">https://www.w3.org/TR/xml/#sec-guessing</a>.
+	 * 
+	 * @param data the input bytes
+	 * @return returns the detected charset
+	 */
+	public static String detectXmlEncoding(byte[] data) {
+		Charset preliminary = guessEncoding(data); 
+		String decl = new String(Arrays.copyOf(data, Math.min(4*100, data.length)), preliminary);
+		Optional<String> specifiedEncoding = getDeclaredEncoding(decl);
+		//FIXME: else return ...
+		return specifiedEncoding.orElse(StandardCharsets.UTF_8.name());
+	}
+	
+	private static Charset guessEncoding(byte[] data) {
+		// Based on https://www.w3.org/TR/xml/#sec-guessing
+		if (data.length<4) {
+			throw new IllegalArgumentException();
+		}
+		byte[] magic = Arrays.copyOf(data, 4);
+		// Find group of encodings that can be used to decode the declaration (if any)
+		if (Arrays.equals(magic, USC_4_BE)) {
+			//TODO: 
+		} else if (Arrays.equals(magic, USC_4_LE)) {
+			// Note that this test must come before UTF-16 below
+			//TODO:
+		} else if (Arrays.equals(magic, USC_4_2143)) {
+			//TODO:
+		} else if (Arrays.equals(magic, USC_4_3412)) {
+			// Note that this test must come before UTF-16 below
+			//TODO:
+		} else if (magic[0]==(byte)0xFE && magic[1]==(byte)0xFF) {
+			// UTF-16, big endian
+			return StandardCharsets.UTF_16BE;
+		} else if (magic[0]==(byte)0xFF && magic[1]==(byte)0xFE) {
+			// UTF-16, little endian
+			return StandardCharsets.UTF_16LE;
+		} else if (magic[0]==(byte)0xEF && magic[1]==(byte)0xBB && magic[2]==(byte)0xBF) {
+			System.out.println("UTF-8 with BOM");
+			return StandardCharsets.UTF_8;
+		} else if (Arrays.equals(magic, UTF_8)) {
+			System.out.println("UTF-8 no BOM");
+			return StandardCharsets.UTF_8;
+		}
+		System.out.println("Not detected");
+		return StandardCharsets.UTF_8;
+	}
 
 	/**
 	 * <p>Transforms the xml with the specified parameters. By default, this method will set up a caching entity resolver, which
