@@ -14,6 +14,7 @@ public class XMLInfo {
 	private final Attributes attributes;
 	private final String publicId;
 	private final String systemId;
+	private final String encoding;
 	
 	/**
 	 * Provides a builder for XML info.
@@ -25,6 +26,7 @@ public class XMLInfo {
 		private Attributes attributes = null;
 		private String publicId = null;
 		private String systemId = null;
+		private String encoding = null;
 		
 		/**
 		 * Creates a new empty builder.
@@ -97,6 +99,11 @@ public class XMLInfo {
 			return this;
 		}
 		
+		public Builder encoding(String value) {
+			this.encoding = value;
+			return this;
+		}
+		
 		/**
 		 * Creates a new XMLInfo instance using the current state of the builder. 
 		 * @return returns a new XMLInfo instance
@@ -113,6 +120,7 @@ public class XMLInfo {
 		this.attributes = builder.attributes;
 		this.publicId = builder.publicId;
 		this.systemId = builder.systemId;
+		this.encoding = builder.encoding;
 	}
 
 	/**
@@ -170,6 +178,10 @@ public class XMLInfo {
 	 */
 	public String getSystemId() {
 		return systemId;
+	}
+	
+	public String getEncoding() {
+		return encoding;
 	}
 
 }

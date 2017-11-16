@@ -7,7 +7,13 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -340,8 +346,10 @@ public class XMLTools {
 		} catch (SAXException e) {
 			throw new XMLToolsException("Failed to set up XML parser.", e);
 		}
-		XMLHandler dh = new XMLHandler(peek);
+		XMLHandler dh = null;
 		try (InputStream is = uri.toURL().openStream()) {
+			InputSource source = new InputSource(is);
+			dh = new XMLHandler(peek, source);
 	        XMLReader reader = saxParser.getXMLReader();
 	        if (dh != null) {
 	            reader.setContentHandler(dh);
@@ -352,7 +360,7 @@ public class XMLTools {
 	            reader.setErrorHandler(dh);
 	            reader.setDTDHandler(dh);
 	        }
-	        InputSource source = new InputSource(is);
+	       
 	        source.setSystemId(uri.toASCIIString());
 			saxParser.getXMLReader().parse(source);
 		} catch (StopParsing e) {
@@ -368,12 +376,14 @@ public class XMLTools {
 	private static class XMLHandler extends DefaultHandler implements LexicalHandler {
 		private final EntityResolver resolver;
 		private final boolean peek;
+		private final InputSource is;
 		private final XMLInfo.Builder builder;
 		private XMLInfo root = null;
 		
-		XMLHandler(boolean peek) {
+		XMLHandler(boolean peek, InputSource is) {
 			this.resolver = new EntityResolverCache();
 			this.peek = peek;
+			this.is = is;
 			this.builder = new XMLInfo.Builder();
 		}
 
@@ -381,7 +391,7 @@ public class XMLTools {
 		public void startElement(String uri, String localName, String qName,
 				Attributes attributes) throws SAXException {
 			if (this.root == null) {
-				this.root = builder.uri(uri).localName(localName).qName(qName).attributes(attributes).build();
+				this.root = builder.uri(uri).localName(localName).qName(qName).attributes(attributes).encoding(is.getEncoding()).build();
 				if (peek) {
 					throw new StopParsing();
 				}

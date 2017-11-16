@@ -11,9 +11,6 @@ import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 
 import org.daisy.dotify.common.io.FileIO;
-import org.daisy.dotify.common.xml.XMLInfo;
-import org.daisy.dotify.common.xml.XMLTools;
-import org.daisy.dotify.common.xml.XMLToolsException;
 import org.junit.Test;
 
 @SuppressWarnings("javadoc")
@@ -44,6 +41,20 @@ public class XMLToolsTest {
 			XMLInfo info = XMLTools.parseXML(f);
 			assertEquals("http://www.example.com/ns/test", info.getUri());
 			assertEquals("root", info.getLocalName());
+		} finally {
+			if (f!=null) {
+				f.delete();
+			}
+		}
+	}
+	
+	@Test
+	public void testXMLInfo_03() throws XMLToolsException, URISyntaxException, IOException {
+		File f = null;
+		try {
+			f = getResourceCopy("resource-files/encoding-01.xml");
+			XMLInfo info = XMLTools.parseXML(f);
+			assertEquals("utf-8", info.getEncoding());
 		} finally {
 			if (f!=null) {
 				f.delete();
