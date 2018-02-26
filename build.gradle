@@ -18,8 +18,8 @@ apply plugin: 'biz.aQute.bnd.builder'
 
 group = 'org.daisy.dotify'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 9
+targetCompatibility = 9
 
 sourceSets {
 	main {	java { srcDir 'src' }	resources { srcDir 'src' } }
@@ -50,7 +50,7 @@ repositories {
 
 dependencies {
     testImplementation group: "junit", name: "junit", version: "4.12"
-    testImplementation "org.mockito:mockito-core:1.10.19"
+    testImplementation "org.mockito:mockito-core:2.15.0"
 }
 
 jar {
