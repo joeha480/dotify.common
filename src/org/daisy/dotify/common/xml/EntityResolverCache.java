@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -23,6 +24,14 @@ public class EntityResolverCache implements EntityResolver {
 	 */
 	public EntityResolverCache() {
 		cache = new URLCache();
+	}
+	
+	/**
+	 * Creates a new entity resolver with cache
+	 * @param path path to the cache
+	 */
+	public EntityResolverCache(Path path) {
+		cache = new URLCache(path.toFile());
 	}
 
 	@Override

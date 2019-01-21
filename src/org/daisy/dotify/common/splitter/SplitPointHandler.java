@@ -457,9 +457,10 @@ public class SplitPointHandler<T extends SplitPointUnit, U extends SplitPointDat
 	 * 
 	 * @param data the units
 	 * @param limit the maximum width that is relevant to calculate
+	 * @param useLastUnitSize 
 	 * @return returns the size 
 	 */
-	static <T extends SplitPointUnit, U extends SplitPointDataSource<T, U>> float totalSize(U data, float limit, boolean useLastUnitSize) {
+	public static <T extends SplitPointUnit, U extends SplitPointDataSource<T, U>> float totalSize(U data, float limit, boolean useLastUnitSize) {
 		float ret = 0;
 		Set<String> ids = new HashSet<>();
 		Supplements<T> map = data.getSupplements();

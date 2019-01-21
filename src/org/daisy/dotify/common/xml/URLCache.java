@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.daisy.dotify.common.io.FileIO;
 
@@ -15,11 +16,18 @@ class URLCache {
 	private final File root;
 	
 	URLCache() {
-		this(new File(System.getProperty("java.io.tmpdir"), "url-cache"));
+		this(getCachePath());
 	}
-
+	
 	URLCache(File root) {
 		this.root = root;
+	}
+	
+	private static File getCachePath() {
+		String cachePath = Optional.ofNullable(System.getProperty("app.fsname"))
+				.map(v->System.getProperty("user.home") + File.separatorChar + '.' + v)
+				.orElse(System.getProperty("java.io.tmpdir"));
+		return new File(cachePath, "url-cache");
 	}
 
 	InputStream openStream(URL url) throws IOException {
