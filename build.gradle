@@ -22,12 +22,44 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 sourceSets {
-	main {	java { srcDir 'src' }	resources { srcDir 'src' } }
-	test {	java { srcDir 'test' }	resources { srcDir 'test' } }
+	main {	java { srcDirs = ['src'] }	resources { srcDirs = ['src'] } }
+	test {	java { srcDirs = ['test'] }	resources { srcDirs = ['test'] } }
+	moduleInfo {
+		// Provide a separate source set for the module-info.java file
+		java {
+			srcDirs = ['srcModule']
+			if (JavaVersion.current() <= JavaVersion.VERSION_1_8) {
+				excludes = ['module-info.java']
+			}
+		}
+		resources {
+			srcDirs = ['srcModule']
+			if (JavaVersion.current() <= JavaVersion.VERSION_1_8) {
+				excludes = ['module-info.java']
+			}
+		}
+	}
 }
 
 compileJava {
     options.encoding = 'UTF-8'
+    inputs.property("moduleName", moduleName)
+}
+
+compileModuleInfoJava {
+	sourceCompatibility = 11
+	targetCompatibility = 11
+	inputs.property("moduleName", moduleName)
+
+	doFirst {
+		classpath += sourceSets.main.compileClasspath
+	
+		options.compilerArgs = [
+			'--module-path', classpath.asPath,
+			'--patch-module', "$moduleName=" + files(sourceSets.main.java.srcDirs).asPath,
+		]
+		classpath = files()
+	}
 }
 
 compileTestJava {
@@ -58,7 +90,6 @@ jar {
 			'-sources': 'true',
 			// See https://github.com/bndtools/bnd/issues/2677
 			'-exportcontents': 'org.daisy.dotify.common.*',
-			'Automatic-Module-Name': "$moduleName",
 			'Bundle-Name': "$moduleName",
 			'Bundle-SymbolicName': "$moduleName",
 			'Built-By': System.getProperty("user.name"),
@@ -68,6 +99,8 @@ jar {
 			'Include-Resource': 'LICENSE, NOTICE'
 		)
 	}
+	from sourceSets.main.output
+	from sourceSets.moduleInfo.output
 }
 
 task javadocJar(type: Jar) {
